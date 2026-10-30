@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50.1312 -66.9312 104.7424 145.7624" font-family="Noto Sans SC, Noto Sans CJK SC, Source Han Sans SC, sans-serif" style="font-kerning:none;font-variant-ligatures:none;text-spacing-trim:space-all;text-autospace:no-autospace">
+<g data-id="#M1"><path d="M-14.00,-28.00 L11.90,-28.00" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="#M1"><path d="M-14.00,-0.00 L11.90,-0.00" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="#M1"><path d="M-5.60,-0.00 L6.02,-7.84 L6.02,7.84 L-5.60,-0.00 Z" fill="#e0e0e2" stroke="none"/></g>
+<g data-id="#M1"><path d="M11.90,9.52 L11.90,-37.52" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="#M1"><path d="M23.10,-1.68 L23.10,-26.32" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="#M1"><path d="M23.10,-14.00 L28.00,-14.00" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="a wire"><path d="M-14.00,-28.00 L-14.00,-0.00 L-14.00,30.80 L42.00,30.80 L42.00,-14.00 L42.00,-58.80 L-42.00,-58.80 L-42.00,58.80 L12.60,58.80" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="a wire"><path d="M28.00,-14.00 L42.00,-14.00" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="%g0"><path d="M12.60,58.80 L25.20,58.80" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="%g0"><path d="M25.20,70.70 L25.20,46.90 L42.00,58.80 L25.20,70.70 Z" fill="none" stroke="#e0e0e2" stroke-width="5.04" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g data-id="a usage of $JUNCTION"><circle cx="-14.00" cy="-28.00" r="7.00" fill="#e8590c" stroke="none"/></g>
+<g data-id="a usage of $JUNCTION"><circle cx="-14.00" cy="-0.00" r="7.00" fill="#e8590c" stroke="none"/></g>
+<g data-id="a usage of $JUNCTION"><circle cx="42.00" cy="-14.00" r="7.00" fill="#e8590c" stroke="none"/></g>
+</svg>

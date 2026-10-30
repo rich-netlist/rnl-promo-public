@@ -1,0 +1,40 @@
+# Publish the repository with GitHub Pages. Each talk under talk/ is also zipped into an
+# offline package next to its page (talk/<folder>/<folder>.zip), which the page offers for download.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zip each talk as an offline package
+        run: |
+          cd talk
+          for d in */; do
+            d="${d%/}"
+            zip -qr "$d/$d.zip" "$d" -x "$d/$d.zip"
+            ls -l "$d/$d.zip"
+          done
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
