@@ -335,17 +335,27 @@ body.presenter-mode .presenter {
 .presenter .p-steps i.on { background: var(--rnl); }
 .presenter .p-foot { grid-column: 1 / -1; font-size: 13px; color: var(--ink-3); }
 
-/* ---------- 9 窄屏（手机竖屏）与减弱动效 ---------- */
-@media screen and (max-width: 760px), screen and (max-aspect-ratio: 4/5) {
-  :root { --u: 5.2px; --uh: 5.2px; --t-head-title: 24px; --t-head-lede: 17px; --t-head-kicker: 13px; --pad-x: 16px; --t-hero: 34px; --t-state: 30px; --t-title: 24px; --t-h3: 18px; --t-lead: 17px; --t-body: 15px; --t-small: 13px; --t-tiny: 11.5px; --t-code: 11px; }
-  .scene { min-height: auto; }
-  .stage { width: 100%; height: auto; min-height: calc(var(--vh) * 100); padding: 56px 16px 64px; gap: 18px; transform: none; opacity: 1; }
-  .scene.split > .stage > .body, .grid, .verdicts { grid-template-columns: 1fr !important; display: grid; }
-  .code { overflow-x: auto; }
-  .rail { display: none; }
-  .checklist { columns: 1; }
-  .navmenu { right: 12px; width: calc(100vw - 24px); }
-  .pgno { left: 16px; bottom: 14px; }
+/* ---------- 9 手机和平板（整页缩放）与减弱动效 ---------- */
+/* 整页缩放（fit，core.js 的 fit）：手机、平板和很窄的窗口。版面按 1280×720 排好，整体缩放（--fit）到屏幕，
+   一页占一屏、滑动一页一页吸附；控制条和页码不缩放。rot：竖屏时把幻灯片连同控制条、页码转 90°，横过手机来看 */
+.fit-probe { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100svh; visibility: hidden; pointer-events: none; }
+@media screen {
+  html.fit { --vh: 7.2px; --u: 12.8px; --uh: 12.8px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; scroll-snap-type: y mandatory; }
+  html.fit .scene { min-height: 0; height: 100vh; height: 100svh; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
+  html.fit .stage { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform-origin: 50% 50%; transform: translate(-50%, -50%) scale(var(--fit)); }
+  html.fit.rot .stage { transform: translate(-50%, -50%) rotate(90deg) scale(var(--fit)); }
+  html.fit .rail, html.fit .verify-badge, html.fit .dock .desk-only { display: none !important; }
+  html.fit .pgno { left: 12px; bottom: 10px; }
+  html.fit .navmenu { right: 12px; width: min(420px, calc(100vw - 24px)); }
+  /* 竖着看（tall）：幻灯片上下留有空白，控制条常驻底部、不自动隐藏，页码挪到左上角 */
+  html.fit.tall body.idle .dock { opacity: 1; transform: none; pointer-events: auto; }
+  html.fit.tall .pgno { top: 12px; bottom: auto; }
+  html.fit.rot { overflow: hidden; scroll-snap-type: none; touch-action: none; }
+  html.fit.rot .pgno { left: 12px; top: 12px; bottom: auto; transform-origin: 0 0; transform: rotate(90deg) translateY(-100%); }
+  html.fit.rot .dock { right: auto; left: 12px; bottom: 12px; transform-origin: 0 100%; transform: rotate(90deg) translateX(-100%); }
+  html.fit.rot body.idle .dock { transform: rotate(90deg) translateX(-100%); }
+  html.fit.rot .zoom figure { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+  html.fit.rot .zoom img, html.fit.rot .zoom svg { width: 94vh; height: 80vw; }
 }
 @media (prefers-reduced-motion: reduce) {
   .js .rise, .js [data-step] { animation: none !important; transition: none !important; filter: none !important; }

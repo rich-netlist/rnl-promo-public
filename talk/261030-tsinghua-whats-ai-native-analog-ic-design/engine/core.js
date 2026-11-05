@@ -55,6 +55,9 @@ const theme = {
 theme.init();
 const params = new URLSearchParams(location.search);
 const PRESENTER = params.has('presenter');
+/* 移动设备的“整页缩放”（fit）：触屏且不能悬停的设备，或很窄、竖着的窗口；?fit=1 强制打开，?fit=0 关闭 */
+const FIT_Q = matchMedia('(hover: none) and (pointer: coarse), (max-width: 760px), (max-aspect-ratio: 4/5)');
+const FIT_PARAM = params.get('fit');
 
 /* ---------------- 原理图：把 figs.js 里的 SVG 放进页面 ---------------- */
 function mountFigure(el) {
@@ -364,7 +367,7 @@ const deck = {
     const y0 = scrollY, dy = y - y0;
     cancelAnimationFrame(this.anim); this.anim = 0;
     if (Math.abs(dy) < 2) { this.targetY = null; return; }
-    if (reduced) { window.scrollTo(0, y); this.targetY = null; return; }
+    if (reduced || fit.on) { window.scrollTo(0, y); this.targetY = null; return; }   // 整页缩放时直接跳（滚动吸附也是一页一页的）
     this.targetY = y;
     const dur = clamp(380 + Math.abs(dy) * .3, 520, 1000), t0 = performance.now();
     const tick = now => {
@@ -460,10 +463,11 @@ const ICON = {
   full: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
   notes: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>',
   pres: '<svg viewBox="0 0 24 24"><path d="M3 5h18v11H3z"/><path d="M12 16v4M8 20h8"/></svg>',
+  rotate: '<svg viewBox="0 0 24 24"><rect x="8" y="3" width="9" height="16" rx="2"/><path d="M3 13a8 8 0 0 0 6 8M5 21h4v-4"/></svg>',
   download: '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>'
 };
 const chrome = {
-  built: false, menuFor: null, idleT: 0, presenterWin: null,
+  built: false, menuFor: null, idleT: 0, presenterWin: null, ghostTap: 0,
   build() {
     H('div', { class: 'graticule', 'aria-hidden': 'true' }, document.body);
     const rail = H('nav', { class: 'rail', 'aria-label': '章节导航' }, document.body);
@@ -476,19 +480,21 @@ const chrome = {
     this.menu = H('div', { class: 'navmenu', hidden: '', role: 'dialog', 'aria-label': '页面列表' }, document.body);
     this.menu.addEventListener('click', e => e.stopPropagation());
     document.addEventListener('click', () => this.toggleMenu(null, false));
-    const dock = H('div', { class: 'dock' }, document.body);
-    const btn = (label, html, fn) => { const b = H('button', { type: 'button', 'aria-label': label, title: label, html }, dock); b.addEventListener('click', e => { e.stopPropagation(); fn(); }); return b; };
+    const dock = this.dock = H('div', { class: 'dock' }, document.body);
+    // 触屏上控制条隐藏时的那一下只是叫出控制条（ghostTap），不算按了按钮
+    const btn = (label, html, fn) => { const b = H('button', { type: 'button', 'aria-label': label, title: label, html }, dock); b.addEventListener('click', e => { e.stopPropagation(); if (performance.now() < this.ghostTap) return; fn(); }); return b; };
     this.bPrev = btn('上一步', ICON.prev, () => deck.prev());
     this.beats = H('span', { class: 'beats', 'aria-hidden': 'true' }, dock);
     this.bNext = btn('下一步', ICON.next, () => deck.next());
     H('span', { class: 'sep' }, dock);
     btn('页面列表（M）', ICON.menu, () => this.toggleMenu(this.curSec()));
+    this.bRot = btn('横过来看 / 转回去', ICON.rotate, () => fit.setRot(!fit.rot));
     this.bNotes = btn('演讲备注（N）', ICON.notes, () => this.toggleNotes());
-    btn('讲者视图（S）', ICON.pres, () => this.openPresenter());
+    btn('讲者视图（S）', ICON.pres, () => this.openPresenter()).classList.add('desk-only');
     this.bDraft = btn('草稿标记（D）', '核', () => this.toggleDraft());
-    btn('切换明暗（T）', ICON.theme, () => theme.toggle());
-    btn('全屏（F）', ICON.full, () => this.fullscreen());
-    btn('快捷键（?）', '?', () => this.toggleHelp());
+    btn('切换明暗（T）', ICON.theme, () => theme.toggle()).classList.add('desk-only');
+    this.bFull = btn('全屏（F）', ICON.full, () => this.fullscreen());
+    btn('快捷键（?）', '?', () => this.toggleHelp()).classList.add('desk-only');
     // 没有备注、没有待核实项的页面（如公开版）不显示这两个按钮
     this.hasNotes = deck.scenes.some(s => s.notes);
     this.bNotes.hidden = !this.hasNotes;
@@ -527,6 +533,11 @@ const chrome = {
     if (this.hasNotes && store.get('notes', false)) this.notesPanel.hidden = false;
     this.keys();
     addEventListener('mousemove', () => this.wake(), { passive: true });
+    addEventListener('touchstart', () => {
+      if (getComputedStyle(this.dock).pointerEvents === 'none') this.ghostTap = performance.now() + 700;
+      this.wake(4000);
+    }, { passive: true });
+    this.updateFit();
     addEventListener('message', e => {
       const m = e.data || {};
       if (m.type === 'nav') { if (m.dir > 0) deck.next(); else if (m.dir < 0) deck.prev(); else if (m.goto) deck.goId(m.goto); }
@@ -601,6 +612,13 @@ const chrome = {
   },
   toggleHelp(force) { this.help.hidden = force != null ? !force : !this.help.hidden; },
   toggleBlack() { this.black.hidden = !this.black.hidden; },
+  // 整页缩放时：旋转按钮只在竖屏出现；全屏按钮只在浏览器支持全屏时出现（iPhone 不支持）
+  updateFit() {
+    if (!this.bRot) return;
+    this.bRot.hidden = !(fit.on && fit.portrait);
+    this.bRot.classList.toggle('on', fit.rot);
+    this.bFull.hidden = fit.on && !document.fullscreenEnabled;
+  },
   wake(ms = 2600) {
     document.body.classList.remove('idle');
     clearTimeout(this.idleT);
@@ -723,8 +741,68 @@ const zoom = {
   close() { this.box.hidden = true; this.box.replaceChildren(); }
 };
 
+/* ---------------- 整页缩放（fit）：版面固定按 1280×720 排，整体缩放到屏幕；控制条和页码不缩放 ----------------
+   竖屏时可以把幻灯片转 90°（rot），横过手机来看；转过来以后，点击和滑动也按转过来的方向算。
+   PC 上不进入这个模式，显示不变。 */
+const fit = {
+  on: false, rot: false, portrait: false, size: '',
+  init() {
+    this.probe = H('div', { class: 'fit-probe', 'aria-hidden': 'true' }, document.body);
+    addEventListener('resize', () => this.update());
+    addEventListener('orientationchange', () => setTimeout(() => this.update(), 250));
+    this.touch();
+    this.update();
+  },
+  update() {
+    const was = [this.on, this.rot, this.portrait].join();
+    this.on = !PRESENTER && (FIT_PARAM === '1' || (FIT_PARAM !== '0' && FIT_Q.matches));
+    const w = this.probe.clientWidth || innerWidth, h = this.probe.clientHeight || innerHeight;
+    const resized = this.size !== (this.size = w + 'x' + h);   // 探针按 100svh 量，手机地址栏伸缩不算
+    this.portrait = h > w;
+    if (!this.on || !this.portrait) this.rot = false;
+    root.classList.toggle('fit', this.on);
+    root.classList.toggle('rot', this.rot);
+    root.classList.toggle('tall', this.on && this.portrait && !this.rot);   // 竖着看：幻灯片上下有空，控制条常驻
+    const fw = this.rot ? h : w, fh = this.rot ? w : h;
+    root.style.setProperty('--fit', this.on ? Math.min(fw / 1280, fh / 720).toFixed(4) : '1');
+    if (chrome.built) chrome.updateFit();
+    // 换了模式或方向，或者整页缩放时屏幕大小变了（页高跟着变），马上回到当前这一页的开头；
+    // 要在滚动事件按新的页高重新算“当前页”之前做
+    if ((was !== [this.on, this.rot, this.portrait].join() || (this.on && resized)) && deck.scenes) {
+      const s = deck.scenes[deck.cur || 0];
+      if (s) window.scrollTo(0, deck.top(s));
+    }
+  },
+  setRot(on) { this.rot = !!on && this.on && this.portrait; this.update(); },
+  // 触屏：点幻灯片右边三分之二是下一步，左边三分之一是上一步；横着滑动翻页；转过来时（rot）上下滑也翻页
+  touch() {
+    let t0 = null;
+    addEventListener('touchstart', e => { t0 = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
+    addEventListener('touchend', e => {
+      if (!this.on || !t0 || !deck.scenes) return;
+      const p = e.changedTouches[0], dx = p.clientX - t0.x, dy = p.clientY - t0.y, dt = Date.now() - t0.t;
+      t0 = null;
+      const el = e.target;
+      if (el.closest('a, button, input, [data-zoom], .dock, .navmenu, .zoom, .help, .notes-panel, .blackout') || !el.closest('.scene')) return;
+      // 控制条自动隐藏时点不到，点在它的位置上只是把它叫出来，不翻页
+      const d = chrome.dock && chrome.dock.getBoundingClientRect();
+      if (d && p.clientX >= d.left - 8 && p.clientX <= d.right + 8 && p.clientY >= d.top - 8 && p.clientY <= d.bottom + 8) return;
+      const cx = this.rot ? dy : dx, cy = this.rot ? -dx : dy;   // 屏幕上的移动换成幻灯片自己的方向
+      if (Math.hypot(dx, dy) < 12 && dt < 500) {
+        const pos = this.rot ? p.clientY / innerHeight : p.clientX / innerWidth;
+        pos < 1 / 3 ? deck.prev() : deck.next();
+      } else if (Math.abs(cx) > 50 && Math.abs(cx) > Math.abs(cy) * 1.4) {
+        cx < 0 ? deck.next() : deck.prev();
+      } else if (this.rot && Math.abs(cy) > 50) {
+        cy < 0 ? deck.next() : deck.prev();
+      }
+    }, { passive: true });
+  }
+};
+
 function boot() {
   if (PRESENTER) { deck.init(); presenter.build(); return; }
+  fit.init();
   deck.init();
   chrome.build();
   chrome.update();

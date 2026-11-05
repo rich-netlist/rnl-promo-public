@@ -64,10 +64,15 @@ DECK.widget('bubble', (el, ctx) => {
     // the object and its texts (#M1::name, #M1::model), so that the bubble covers neither
     const id = el.dataset.target, gs = fig ? $$('g[data-id]', fig).filter(x => x.dataset.id === id || x.dataset.id.startsWith(id + '::')) : [];
     if (!gs.length) return;
+    // fit mode scales (and may turn) the whole stage: measure it with that transform taken off for a moment, so the
+    // numbers are the stage's own pixels; it is put back before anything is drawn
+    const stage = el.closest('.stage'), tf = stage ? stage.style.transform : '';
+    if (stage && document.documentElement.classList.contains('fit')) stage.style.transform = 'none';
     const rs = gs.map(g => g.getBoundingClientRect()).filter(r => r.width);
     const own = gs[0].dataset.id === id ? gs[0].getBoundingClientRect() : rs[0];
-    const a = { left: Math.min(...rs.map(r => r.left)), right: Math.max(...rs.map(r => r.right)), top: own.top, height: own.height };
+    const a = rs.length && { left: Math.min(...rs.map(r => r.left)), right: Math.max(...rs.map(r => r.right)), top: own.top, height: own.height };
     const b = el.parentElement.getBoundingClientRect();
+    if (stage) stage.style.transform = tf;
     if (!rs.length || !b.width) return;
     const left = el.dataset.side === 'left';
     el.classList.toggle('to-left', left);
