@@ -562,6 +562,12 @@ const chrome = {
     H('b', { text: s.title }, hm);
     const x = H('button', { type: 'button', 'aria-label': '关闭', text: '✕' }, head);
     x.addEventListener('click', () => this.toggleMenu(null, false));
+    // 整页缩放时没有右侧的章节导航，换节靠列表顶上这一排节号（只在 html.fit 下显示，见 core.css）
+    const secs = H('div', { class: 'secs' }, this.menu), cs = this.curSec();
+    sections.forEach(t => {
+      const b = H('button', { type: 'button', class: [t.no === s.no && 'open', t.no === cs && 'cur'].filter(Boolean).join(' '), 'aria-label': `第 ${t.no} 节 ${t.title}`, text: t.no }, secs);
+      b.addEventListener('click', () => this.toggleMenu(t.no, true));
+    });
     const ol = H('ol', {}, this.menu);
     s.scenes.forEach(sc => {
       const a = H('a', { href: '#' + sc.id, class: sc.id === curId ? 'cur' : null }, H('li', {}, ol));
@@ -782,6 +788,7 @@ const fit = {
       if (!this.on || !t0 || !deck.scenes) return;
       const p = e.changedTouches[0], dx = p.clientX - t0.x, dy = p.clientY - t0.y, dt = Date.now() - t0.t;
       t0 = null;
+      if (chrome.menu && !chrome.menu.hidden) return;   // 页面列表开着时，点外面只是把它关上（click 里关），不翻页
       const el = e.target;
       if (el.closest('a, button, input, [data-zoom], .dock, .navmenu, .zoom, .help, .notes-panel, .blackout') || !el.closest('.scene')) return;
       // 控制条自动隐藏时点不到，点在它的位置上只是把它叫出来，不翻页

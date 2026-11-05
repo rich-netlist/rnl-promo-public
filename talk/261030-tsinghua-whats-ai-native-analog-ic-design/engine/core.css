@@ -274,6 +274,7 @@ body.draft .verify-badge { display: inline-flex; }
 .navmenu li a i { font: 12px/1.6 var(--font-mono); font-style: normal; color: var(--ink-3); }
 .navmenu li a:hover { background: var(--panel-2); }
 .navmenu li a.cur { background: var(--rnl-soft); color: var(--rnl-ink); font-weight: 600; }
+.navmenu .secs { display: none; }
 .dock {
   position: fixed; z-index: 30; right: max(12px, calc(var(--u) * 1.2)); bottom: max(12px, calc(var(--u) * 1.2));
   display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 12px;
@@ -346,7 +347,13 @@ body.presenter-mode .presenter {
   html.fit.rot .stage { transform: translate(-50%, -50%) rotate(90deg) scale(var(--fit)); }
   html.fit .rail, html.fit .verify-badge, html.fit .dock .desk-only { display: none !important; }
   html.fit .pgno { left: 12px; bottom: 10px; }
-  html.fit .navmenu { right: 12px; width: min(420px, calc(100vw - 24px)); }
+  /* 页面列表：顶上一排节号用来换节（PC 上换节用右侧的章节导航）；只淡入，因为 pop 动画会盖掉下面定位和旋转用的 transform */
+  html.fit .navmenu { right: 12px; width: min(420px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100svh - 24px); animation: page-in .2s ease-out; }
+  html.fit .navmenu .secs { display: grid; grid-template-columns: repeat(auto-fit, minmax(22px, 1fr)); gap: 4px; padding: 8px 8px 0; }
+  html.fit .navmenu .secs button { height: 30px; padding: 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink-2); font: 600 12px/1 var(--font-mono); cursor: pointer; }
+  html.fit .navmenu .secs button.cur { background: var(--rnl); border-color: var(--rnl); color: var(--on-rnl); }
+  html.fit .navmenu .secs button.open { outline: 2px solid var(--rnl); outline-offset: 1px; }
+  html.fit .notes-panel { right: 12px; bottom: 64px; }
   /* 竖着看（tall）：幻灯片上下留有空白，控制条常驻底部、不自动隐藏，页码挪到左上角 */
   html.fit.tall body.idle .dock { opacity: 1; transform: none; pointer-events: auto; }
   html.fit.tall .pgno { top: 12px; bottom: auto; }
@@ -354,6 +361,9 @@ body.presenter-mode .presenter {
   html.fit.rot .pgno { left: 12px; top: 12px; bottom: auto; transform-origin: 0 0; transform: rotate(90deg) translateY(-100%); }
   html.fit.rot .dock { right: auto; left: 12px; bottom: 12px; transform-origin: 0 100%; transform: rotate(90deg) translateX(-100%); }
   html.fit.rot body.idle .dock { transform: rotate(90deg) translateX(-100%); }
+  /* 转过来时页面列表和备注也转：列表靠幻灯片的右边、上下居中，备注在控制条上面 */
+  html.fit.rot .navmenu { top: auto; right: auto; left: 50%; bottom: 12px; width: min(420px, calc(100vh - 24px)); width: min(420px, calc(100svh - 24px)); max-height: calc(100vw - 24px); transform-origin: 0 100%; transform: rotate(90deg) translate(-100%, 50%); }
+  html.fit.rot .notes-panel { left: 64px; top: 12px; right: auto; bottom: auto; width: calc(100vh - 24px); width: calc(100svh - 24px); max-height: 34vw; transform-origin: 0 0; transform: rotate(90deg) translateY(-100%); }
   html.fit.rot .zoom figure { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
   html.fit.rot .zoom img, html.fit.rot .zoom svg { width: 94vh; height: 80vw; }
 }
