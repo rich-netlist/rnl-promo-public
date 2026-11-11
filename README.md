@@ -5,5 +5,6 @@ Public copies of talks about [Rich Netlist (RNL)](https://rich-netlist.github.io
 | Talk | Page |
 | --- | --- |
 | 2026-10-30 · 清华 · AI-native 模拟 IC 设计应该是什么样的？ | <https://rich-netlist.github.io/rnl-promo-public/talk/261030-tsinghua-whats-ai-native-analog-ic-design/> |
+| 2026-11-11 · AI-native 模拟 IC 设计应该是什么样的？ RNL 0.4 版，加上画图实验 | <https://rich-netlist.github.io/rnl-promo-public/talk/261111-whats-ai-native-analog-ic-design/> |
 
 The talks are built from the sources in a private repository; this one holds only the published pages.
