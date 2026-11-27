@@ -236,10 +236,13 @@ function mountNetlist(el) {
   el.innerHTML = out.join('');
 }
 
-/* ---------------- 今天的日期：<span data-today></span> ---------------- */
+/* ---------------- 日期：<span data-today></span> 写放映当天；
+   <span data-today data-date="2026-10-30"></span> 写固定的那天（公开副本用） ---------------- */
 function mountToday(el) {
-  const d = new Date();
-  el.textContent = `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+  const fixed = /^(\d{4})-(\d{2})-(\d{2})$/.exec(el.dataset.date || '');
+  const [y, m, d] = fixed ? fixed.slice(1).map(Number)
+    : (t => [t.getFullYear(), t.getMonth() + 1, t.getDate()])(new Date());
+  el.textContent = `${y} 年 ${m} 月 ${d} 日`;
 }
 
 /* ---------------- 章节结构 ---------------- */
